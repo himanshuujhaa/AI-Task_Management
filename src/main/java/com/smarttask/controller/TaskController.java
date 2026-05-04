@@ -1,4 +1,5 @@
 package com.smarttask.controller;
+import com.smarttask.dto.DashboardResponse;
 import com.smarttask.dto.TaskRequest;
 import com.smarttask.model.entity.Task;
 import com.smarttask.model.enums.TaskPriority;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.smarttask.constants.Constants.TASK_DELETED_SUCCESSFULLY;
@@ -113,5 +115,28 @@ public class TaskController {
     )
     {
         return taskRepository.findAll(PageRequest.of(page, size));
+    }
+
+    @GetMapping("/search")
+    public List<Task> searchTask(@RequestParam String keyword) { // used for /search?name=keyword
+        return taskRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
+    }
+
+    @GetMapping("/taskstatus/overdue")
+    public List<Task> getOverdueTask() {
+        return taskRepository.findByDueDateBeforeAndStatusNot(LocalDateTime.now(), TaskStatus.COMPLETED);
+    }
+
+    @GetMapping("/dashboard")
+    public DashboardResponse getDashboardResponse() {
+        long total = taskRepository.count();
+
+        long completed = taskRepository.countByStatus(TaskStatus.COMPLETED);
+        long pending = taskRepository.countByStatus(TaskStatus.PENDING);
+
+        long overdue = taskRepository.countByDueDateBeforeAndStatusNot(LocalDateTime.now(), TaskStatus.COMPLETED);
+        long highPriority = taskRepository.countByPriority(TaskPriority.HIGH);
+
+        return new DashboardResponse(total, completed, pending, overdue, highPriority);
     }
 }
