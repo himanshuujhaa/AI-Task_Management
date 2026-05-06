@@ -1,6 +1,7 @@
 package com.smarttask.controller;
 import com.smarttask.dto.DashboardResponse;
 import com.smarttask.dto.TaskRequest;
+import com.smarttask.dto.TaskResponse;
 import com.smarttask.model.entity.Task;
 import com.smarttask.model.entity.User;
 import com.smarttask.model.enums.TaskPriority;
@@ -61,14 +62,32 @@ public class TaskController {
         return taskRepository.save(task);
     }
 
+    private TaskResponse mapToResponse(Task task) {
+        String userName = "name not provided";
+
+        if(task.getUser() != null) {
+            userName = task.getUser().getName();
+        }
+
+        return TaskResponse.builder()
+                .id(task.getId()).title(task.getTitle()).description(task.getDescription())
+                .completed(task.isCompleted()).dueDate(task.getDueDate()).createdAt(task.getCreatedAt())
+                .status(task.getStatus()).priority(task.getPriority()).userName(userName)
+                .build();
+
+    }
+
     @GetMapping
-    public List<Task> getAllTask() {
-        return taskRepository.findAll();
+    public List<TaskResponse> getAllTask() {
+        return taskRepository.findAll().stream().map(this::mapToResponse).toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-        return taskRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+//    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
+    public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id) {
+//        return taskRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return taskRepository.findById(id).map(task -> ResponseEntity.ok(mapToResponse(task)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
