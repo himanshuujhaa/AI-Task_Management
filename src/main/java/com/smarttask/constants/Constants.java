@@ -7,4 +7,5 @@ public class Constants {
     public static final String URGENT = "urgent";
     public static final String ASAP = "asap";
     public static final String IMPORTANT = "important";
+    public static final String USER_NOT_FOUND = "User not found";
 }

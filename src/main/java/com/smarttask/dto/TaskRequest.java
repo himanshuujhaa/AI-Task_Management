@@ -16,4 +16,7 @@ public class TaskRequest {
     private LocalDateTime dueDate;
     private TaskStatus status;
     private TaskPriority taskPriority;
+
+    private Long userId;
+
 }

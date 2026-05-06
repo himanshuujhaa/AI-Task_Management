@@ -38,4 +38,9 @@ public class Task {
         if (this.status == null) this.status = TaskStatus.PENDING;
         if (this.priority == null) this.priority = TaskPriority.LOW;
     }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
 }

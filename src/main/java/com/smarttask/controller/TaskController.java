@@ -2,9 +2,11 @@ package com.smarttask.controller;
 import com.smarttask.dto.DashboardResponse;
 import com.smarttask.dto.TaskRequest;
 import com.smarttask.model.entity.Task;
+import com.smarttask.model.entity.User;
 import com.smarttask.model.enums.TaskPriority;
 import com.smarttask.model.enums.TaskStatus;
 import com.smarttask.repository.TaskRepository;
+import com.smarttask.repository.UserRepository;
 import com.smarttask.service.TaskAiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.smarttask.constants.Constants.TASK_DELETED_SUCCESSFULLY;
+import static com.smarttask.constants.Constants.USER_NOT_FOUND;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -25,9 +28,14 @@ public class TaskController {
     private final TaskRepository taskRepository;
 
     private final TaskAiService taskAiService;
+    private final UserRepository userRepository;
 
     @PostMapping
     public Task createTask(@RequestBody TaskRequest request) {
+
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
+
         TaskPriority priority = request.getTaskPriority();
 
         if(priority == null) {
@@ -47,6 +55,7 @@ public class TaskController {
                 .completed(false)
                 .priority(priority)
                 .status(status)
+                .user(user)
                 .build();
 
         return taskRepository.save(task);
@@ -138,5 +147,10 @@ public class TaskController {
         long highPriority = taskRepository.countByPriority(TaskPriority.HIGH);
 
         return new DashboardResponse(total, completed, pending, overdue, highPriority);
+    }
+
+    @GetMapping("/user/{userId}")
+    public List<Task> getTaskByUser(@PathVariable Long userId) {
+        return taskRepository.findByUserId(userId);
     }
 }
