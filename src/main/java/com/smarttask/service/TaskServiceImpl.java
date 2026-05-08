@@ -1,5 +1,6 @@
 package com.smarttask.service;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
 import com.smarttask.dto.DashboardResponse;
 import com.smarttask.dto.TaskRequest;
 import com.smarttask.dto.TaskResponse;
@@ -10,10 +11,15 @@ import com.smarttask.model.enums.TaskPriority;
 import com.smarttask.model.enums.TaskStatus;
 import com.smarttask.repository.TaskRepository;
 import com.smarttask.repository.UserRepository;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -21,148 +27,177 @@ import java.util.List;
 
 import static com.smarttask.constants.Constants.*;
 
-@RestController
-@RequestMapping("/api/tasks")
+@Service
 @RequiredArgsConstructor
-public class TaskServiceImpl implements TaskService{
+public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final TaskAiService taskAiService;
 
-    @PostMapping()
-    public Task createTask(@RequestBody TaskRequest request) {
-        User user = userRepository.findById(request.getUserId())
-                .orElse(() -> new ResourceNotFoundException(USER_NOT_FOUND));
-
-        TaskPriority taskPriority = request.getTaskPriority();
-
-        if(taskPriority == null) {
-            taskPriority = taskAiService.predictPriority(request.getDueDate(), request.getTitle(), request.getDescription());
-        }
-
-        TaskStatus taskStatus = request.getStatus();
-
-        if(taskStatus == null) {
-            taskStatus = TaskStatus.PENDING;
-        }
-
-        Task task = Task.builder().title(request.getTitle())
-                .description(request.getDescription()).dueDate(request.getDueDate())
-                .completed(false).priority(request.getTaskPriority())
-                .status(request.getStatus()).user(user).build();
-
-        return taskRepository.save(task);
-    }
 
     private TaskResponse mapToResponse(Task task) {
         String userName = NAME_NOT_FOUND;
 
-        if(task.getUser() != null) {
+        if(task.getUser().getName() != null) {
             userName = task.getUser().getName();
         }
 
         return TaskResponse.builder()
-                .id(task.getId()).title(task.getTitle()).description(task.getDescription())
-                .completed(task.isCompleted()).dueDate(task.getDueDate()).createdAt(task.getCreatedAt())
-                .status(task.getStatus()).priority(task.getPriority()).userName(userName)
+                .id(task.getId())
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .completed(task.isCompleted())
+                .status(task.getStatus())
+                .dueDate(task.getDueDate())
+                .priority(task.getPriority())
+                .createdAt(task.getCreatedAt())
+                .userName(userName)
                 .build();
 
     }
+    @Override
+    public TaskResponse createTask(TaskRequest request) {
 
-    @GetMapping
-    public List<TaskResponse> getAllTask() {
-        return taskRepository.findAll().stream().map(this::mapToResponse).toList();
-    }
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
 
-    @GetMapping("/{id}")
-//    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-    public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id) {
-//        return taskRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
-        return taskRepository.findById(id).map(task -> ResponseEntity.ok(mapToResponse(task)))
-                .orElse(ResponseEntity.notFound().build());
-    }
+        TaskPriority priority = request.getTaskPriority();
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody TaskRequest request) {
-        return taskRepository.findById(id).map(task -> {
-            task.setTitle(request.getTitle());
-            task.setDescription(request.getDescription());
-            task.setDueDate(request.getDueDate());
-//            task.setPriority(request.getTaskPriority());
-//            task.setStatus(request.getStatus());
-            if(request.getStatus() != null) {
-                task.setStatus(request.getStatus());
-            }
-
-            if(request.getTaskPriority() != null) {
-                task.setPriority(request.getTaskPriority());
-            }
-            else {
-                TaskPriority aiPriority = taskAiService.predictPriority(request.getDueDate(), request.getTitle(), request.getDescription());
-                task.setPriority(aiPriority);
-            }
-
-            Task updated = taskRepository.save(task);
-            return ResponseEntity.ok(updated);
-        }).orElse(ResponseEntity.notFound().build());
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteTask(@PathVariable Long id){
-        if(!taskRepository.existsById(id)) {
-            return ResponseEntity.notFound().build();
+        if(priority == null) {
+            priority = taskAiService.predictPriority(
+                    request.getDueDate(), request.getTitle(), request.getDescription()
+            );
         }
 
+        TaskStatus status = request.getStatus();
+
+        if(status == null) {
+            status = TaskStatus.PENDING;
+        }
+
+        Task task = Task.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .completed(false)
+                .dueDate(request.getDueDate())
+                .status(status)
+                .priority(priority)
+                .user(user)
+                .build();
+
+        Task savedTask = taskRepository.save(task);
+
+        return mapToResponse(savedTask);
+    }
+
+    @Override
+    public List<TaskResponse> getAllTasks() {
+        return taskRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Override
+    public TaskResponse getTaskById(Long id) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(TASK_NOT_FOUND));
+
+        return mapToResponse(task);
+    }
+
+    @Override
+    public TaskResponse updateTask(Long id, TaskRequest request) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(TASK_NOT_FOUND));
+
+        task.setTitle(request.getTitle());
+        task.setDescription(request.getDescription());
+        task.setDueDate(request.getDueDate());
+
+        if(request.getStatus() != null) {
+            task.setStatus(request.getStatus());
+        }
+        else {
+            task.setStatus(TaskStatus.PENDING);
+        }
+
+        if(task.getPriority() != null) {
+            task.setPriority(task.getPriority());
+        }
+        else {
+            TaskPriority aiPriority = taskAiService.predictPriority(request.getDueDate(), request.getTitle(), request.getDescription());
+            task.setPriority(aiPriority);
+        }
+
+        Task updatedTask = taskRepository.save(task);
+
+        return mapToResponse(updatedTask);
+    }
+
+    @Override
+    public void deleteTask(Long id) {
+        if(!taskRepository.existsById(id)) {
+            throw new ResourceNotFoundException(TASK_NOT_FOUND);
+        }
         taskRepository.deleteById(id);
-
-        return ResponseEntity.ok(TASK_DELETED_SUCCESSFULLY);
     }
 
-    @GetMapping("/status/{status}")
-    public List<Task> getByStatus(@PathVariable TaskStatus status) {
-        return taskRepository.findByStatus(status);
+    @Override
+    public List<TaskResponse> getTasksByStatus(TaskStatus status) {
+        return taskRepository.findByStatus(status).stream().map(this::mapToResponse).toList();
     }
 
-    @GetMapping("/priority/{priority}")
-    public List<Task> getByPriority(@PathVariable TaskPriority priority) {
-        return taskRepository.findByPriority(priority);
+    @Override
+    public List<TaskResponse> getTasksByPriority(TaskPriority priority) {
+        return taskRepository.findByPriority(priority).stream().map(this::mapToResponse).toList();
     }
 
-    @GetMapping("/page")
-    public Page<Task> getPaginatedTask(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
-    )
-    {
-        return taskRepository.findAll(PageRequest.of(page, size));
+    @Override
+    public Page<TaskResponse> getPaginatedTasks(int page, int sz) {
+
+        Page<Task> taskPage = taskRepository.findAll(PageRequest.of(page, sz));
+
+        List<TaskResponse> responses = taskPage.getContent().stream().map(this::mapToResponse).toList();
+
+        return new PageImpl<>(responses, taskPage.getPageable(), taskPage.getTotalElements());
     }
 
-    @GetMapping("/search")
-    public List<Task> searchTask(@RequestParam String keyword) { // used for /search?name=keyword
-        return taskRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
+    @Override
+    public List<TaskResponse> searchTasks(String keyword) {
+        return taskRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword)
+                .stream().map(this::mapToResponse).toList();
     }
 
-    @GetMapping("/taskstatus/overdue")
-    public List<Task> getOverdueTask() {
-        return taskRepository.findByDueDateBeforeAndStatusNot(LocalDateTime.now(), TaskStatus.COMPLETED);
+    @Override
+    public List<TaskResponse> getOverdueTasks() {
+        return taskRepository.findByDueDateBeforeAndStatusNot(LocalDateTime.now(), TaskStatus.COMPLETED)
+                .stream().map(this::mapToResponse).toList();
     }
 
-    @GetMapping("/dashboard")
-    public DashboardResponse getDashboardResponse() {
-        long total = taskRepository.count();
+    @Override
+    public DashboardResponse getDashboard() {
+        long totalTask = taskRepository.count();
+        long completedTask = taskRepository.countByStatus(TaskStatus.COMPLETED);
+        long pendingTask = taskRepository.countByStatus(TaskStatus.PENDING);
+        long inProgressTask = taskRepository.countByStatus(TaskStatus.IN_PROGRESS);
+        long highPriorityTask = taskRepository.countByPriority(TaskPriority.HIGH);
+        long lowPriorityTask = taskRepository.countByPriority(TaskPriority.LOW);
+        long overDueTask = taskRepository.countByDueDateBeforeAndStatusNot(LocalDateTime.now(), TaskStatus.COMPLETED);
 
-        long completed = taskRepository.countByStatus(TaskStatus.COMPLETED);
-        long pending = taskRepository.countByStatus(TaskStatus.PENDING);
-
-        long overdue = taskRepository.countByDueDateBeforeAndStatusNot(LocalDateTime.now(), TaskStatus.COMPLETED);
-        long highPriority = taskRepository.countByPriority(TaskPriority.HIGH);
-
-        return new DashboardResponse(total, completed, pending, overdue, highPriority);
+        return new DashboardResponse(totalTask, completedTask, pendingTask, inProgressTask, overDueTask, highPriorityTask, lowPriorityTask);
     }
 
-    @GetMapping("/user/{userId}")
-    public List<Task> getTaskByUser(@PathVariable Long userId) {
-        return taskRepository.findByUserId(userId);
+    @Override
+    public List<TaskResponse> getTasksByUser(Long userId) {
+
+        if(!userRepository.existsById(userId)) {
+            System.out.println(USER_NOT_FOUND);
+            throw new ResourceNotFoundException(USER_NOT_FOUND);
+        }
+
+        return taskRepository.findByUserId(userId).stream().map(this::mapToResponse).toList();
     }
+
 }

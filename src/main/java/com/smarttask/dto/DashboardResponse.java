@@ -11,6 +11,8 @@ public class DashboardResponse {
     private long totalTask;
     private long completedTask;
     private long pendingTask;
+    private long inProgressTask;
     private long overDueTask;
     private long highPriorityTask;
+    private long lowPriorityTask;
 }
