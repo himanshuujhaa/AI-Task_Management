@@ -8,4 +8,5 @@ public class Constants {
     public static final String ASAP = "asap";
     public static final String IMPORTANT = "important";
     public static final String USER_NOT_FOUND = "User not found";
+    public static final String NAME_NOT_FOUND = "name not provided";
 }

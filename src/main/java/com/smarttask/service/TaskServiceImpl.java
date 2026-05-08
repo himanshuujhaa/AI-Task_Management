@@ -1,4 +1,5 @@
-package com.smarttask.controller;
+package com.smarttask.service;
+
 import com.smarttask.dto.DashboardResponse;
 import com.smarttask.dto.TaskRequest;
 import com.smarttask.dto.TaskResponse;
@@ -9,62 +10,53 @@ import com.smarttask.model.enums.TaskPriority;
 import com.smarttask.model.enums.TaskStatus;
 import com.smarttask.repository.TaskRepository;
 import com.smarttask.repository.UserRepository;
-import com.smarttask.service.TaskAiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.smarttask.constants.Constants.TASK_DELETED_SUCCESSFULLY;
-import static com.smarttask.constants.Constants.USER_NOT_FOUND;
+import static com.smarttask.constants.Constants.*;
 
-@Service
+@RestController
+@RequestMapping("/api/tasks")
 @RequiredArgsConstructor
-public class TaskController {
+public class TaskServiceImpl implements TaskService{
 
     private final TaskRepository taskRepository;
-
-    private final TaskAiService taskAiService;
     private final UserRepository userRepository;
+    private final TaskAiService taskAiService;
 
-    @PostMapping
+    @PostMapping()
     public Task createTask(@RequestBody TaskRequest request) {
-
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+                .orElse(() -> new ResourceNotFoundException(USER_NOT_FOUND));
 
-        TaskPriority priority = request.getTaskPriority();
+        TaskPriority taskPriority = request.getTaskPriority();
 
-        if(priority == null) {
-            priority = taskAiService.predictPriority(request.getDueDate(), request.getTitle(), request.getDescription());
+        if(taskPriority == null) {
+            taskPriority = taskAiService.predictPriority(request.getDueDate(), request.getTitle(), request.getDescription());
         }
 
-        TaskStatus status = request.getStatus();
+        TaskStatus taskStatus = request.getStatus();
 
-        if(status == null) {
-            status = TaskStatus.PENDING;
+        if(taskStatus == null) {
+            taskStatus = TaskStatus.PENDING;
         }
 
-        Task task = Task.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .dueDate(request.getDueDate())
-                .completed(false)
-                .priority(priority)
-                .status(status)
-                .user(user)
-                .build();
+        Task task = Task.builder().title(request.getTitle())
+                .description(request.getDescription()).dueDate(request.getDueDate())
+                .completed(false).priority(request.getTaskPriority())
+                .status(request.getStatus()).user(user).build();
 
         return taskRepository.save(task);
     }
 
     private TaskResponse mapToResponse(Task task) {
-        String userName = "name not provided";
+        String userName = NAME_NOT_FOUND;
 
         if(task.getUser() != null) {
             userName = task.getUser().getName();
