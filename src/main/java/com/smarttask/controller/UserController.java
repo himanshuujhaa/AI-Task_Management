@@ -1,5 +1,7 @@
 package com.smarttask.controller;
 
+import com.smarttask.dto.UserRequest;
+import com.smarttask.dto.UserResponse;
 import com.smarttask.exception.ResourceNotFoundException;
 import com.smarttask.model.entity.Task;
 import com.smarttask.model.entity.User;
@@ -7,6 +9,7 @@ import com.smarttask.repository.TaskRepository;
 import com.smarttask.repository.UserRepository;
 import com.smarttask.service.UserService;
 import com.smarttask.service.UserServiceImpl;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,18 +32,23 @@ public class UserController {
     private final UserService userService;
 
 
+//    @PostMapping
+//    public ResponseEntity<User> createUser(@Valid @RequestBody User user) {
+//        return ResponseEntity.ok(userService.createUser(user));
+//    }
+
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        return ResponseEntity.ok(userService.createUser(user));
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
+        return ResponseEntity.ok(userService.createUser(request));
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<User> getUserById(@PathVariable Long userId) {
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long userId) {
         return ResponseEntity.ok(userService.getUserById(userId));
     }
 
     @GetMapping()
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 

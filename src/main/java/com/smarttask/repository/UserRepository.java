@@ -1,7 +1,6 @@
 package com.smarttask.repository;
 
 import com.smarttask.model.entity.User;
-import com.smarttask.model.enums.TaskStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
