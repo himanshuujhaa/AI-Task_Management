@@ -22,4 +22,9 @@ public class Constants {
     public static final String ERROR = "Error";
     public static final String EMAIL_ALREADY_EXISTS = "Email already exists";
     public static final long EXPIRY_TIME = 1000 * 60 * 60 * 24;
+    public static final String USER_REGISTERED_SUCCESSFULLY = "User registered successfully";
+    public static final String INVALID_CREDENTIALS = "Invalid Credentials";
+//    public static final String AUTHORIZATION = "Authorization";
+//    public static final String
+
 }
