@@ -3,6 +3,7 @@ package com.smarttask.dto;
 import com.smarttask.model.enums.TaskPriority;
 import com.smarttask.model.enums.TaskStatus;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,13 +20,13 @@ public class TaskRequest {
 
     private String description;
 
-    @NotBlank(message = DUEDATE_REQUIRED)
+    @NotNull(message = DUEDATE_REQUIRED)
     private LocalDateTime dueDate;
 
     private TaskStatus status;
     private TaskPriority taskPriority;
 
-    @NotBlank(message = USERID_REQUIRED)
-    private Long userId;
+//    @NotBlank(message = USERID_REQUIRED)
+//    private Long userId;
 
 }

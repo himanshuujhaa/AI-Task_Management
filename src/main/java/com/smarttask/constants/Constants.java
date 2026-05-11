@@ -24,6 +24,8 @@ public class Constants {
     public static final long EXPIRY_TIME = 1000 * 60 * 60 * 24;
     public static final String USER_REGISTERED_SUCCESSFULLY = "User registered successfully";
     public static final String INVALID_CREDENTIALS = "Invalid Credentials";
+    public static final String ACCESS_DENIED = "Access Denied";
+//    public static final String APP_NAME = ""
 //    public static final String AUTHORIZATION = "Authorization";
 //    public static final String
 

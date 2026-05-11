@@ -14,11 +14,13 @@ import com.smarttask.repository.UserRepository;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,11 +37,10 @@ public class TaskServiceImpl implements TaskService {
     private final UserRepository userRepository;
     private final TaskAiService taskAiService;
 
-
     private TaskResponse mapToResponse(Task task) {
         String userName = NAME_NOT_FOUND;
 
-        if(task.getUser().getName() != null) {
+        if(task.getUser() != null && task.getUser().getName() != null) {
             userName = task.getUser().getName();
         }
 
@@ -57,9 +58,10 @@ public class TaskServiceImpl implements TaskService {
 
     }
     @Override
-    public TaskResponse createTask(TaskRequest request) {
+    public TaskResponse createTask(TaskRequest request, Authentication authentication) {
 
-        User user = userRepository.findById(request.getUserId())
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
 
         TaskPriority priority = request.getTaskPriority();
@@ -92,23 +94,37 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<TaskResponse> getAllTasks() {
-        return taskRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+    public List<TaskResponse> getAllTasks(Authentication authentication) {
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+        return taskRepository.findByUser(user).stream().map(this::mapToResponse).toList();
+//        return taskRepository.findAll()
+//                .stream()
+//                .map(this::mapToResponse)
+//                .toList();
     }
 
     @Override
-    public TaskResponse getTaskById(Long id) {
+    public TaskResponse getTaskById(Long id, Authentication authentication) {
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(TASK_NOT_FOUND));
+
+        if(!task.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException(ACCESS_DENIED);
+        }
 
         return mapToResponse(task);
     }
 
     @Override
-    public TaskResponse updateTask(Long id, TaskRequest request) {
+    public TaskResponse updateTask(Long id, TaskRequest request, Authentication authentication) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(TASK_NOT_FOUND));
 
@@ -123,8 +139,12 @@ public class TaskServiceImpl implements TaskService {
             task.setStatus(TaskStatus.PENDING);
         }
 
-        if(task.getPriority() != null) {
-            task.setPriority(task.getPriority());
+//        if(task.getPriority() != null) {
+//            task.setPriority(task.getPriority());
+//        }
+
+        if(request.getTaskPriority() != null) {
+            task.setPriority(request.getTaskPriority());
         }
         else {
             TaskPriority aiPriority = taskAiService.predictPriority(request.getDueDate(), request.getTitle(), request.getDescription());
@@ -137,7 +157,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void deleteTask(Long id) {
+    public void deleteTask(Long id, Authentication authentication) {
         if(!taskRepository.existsById(id)) {
             throw new ResourceNotFoundException(TASK_NOT_FOUND);
         }

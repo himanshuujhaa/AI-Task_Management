@@ -1,6 +1,7 @@
 package com.smarttask.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.smarttask.model.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
     @Column(nullable = false)
     private String name;
     @Column(nullable = false, unique = true)
@@ -31,6 +36,9 @@ public class User {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+        if(this.role == null) {
+            this.role = Role.USER;
+        }
     }
 
 }

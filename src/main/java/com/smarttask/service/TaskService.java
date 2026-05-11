@@ -7,19 +7,20 @@ import com.smarttask.model.entity.User;
 import com.smarttask.model.enums.TaskPriority;
 import com.smarttask.model.enums.TaskStatus;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
 public interface TaskService {
 
-    TaskResponse createTask(TaskRequest request);
+    TaskResponse createTask(TaskRequest request, Authentication authentication);
 
-    List<TaskResponse> getAllTasks();
+    List<TaskResponse> getAllTasks(Authentication authentication);
 
-    TaskResponse getTaskById(Long id);
-    TaskResponse updateTask(Long id, TaskRequest request);
+    TaskResponse getTaskById(Long id, Authentication authentication);
+    TaskResponse updateTask(Long id, TaskRequest request, Authentication authentication);
 
-    void deleteTask(Long id);
+    void deleteTask(Long id, Authentication authentication);
 
     List<TaskResponse> getTasksByStatus(TaskStatus status);
 

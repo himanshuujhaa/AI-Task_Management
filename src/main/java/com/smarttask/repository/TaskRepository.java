@@ -2,6 +2,7 @@ package com.smarttask.repository;
 
 import com.smarttask.dto.DashboardResponse;
 import com.smarttask.model.entity.Task;
+import com.smarttask.model.entity.User;
 import com.smarttask.model.enums.TaskPriority;
 import com.smarttask.model.enums.TaskStatus;
 import org.springframework.data.domain.Page;
@@ -29,5 +30,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     long countByDueDateBeforeAndStatusNot(LocalDateTime now, TaskStatus status);
 
     List<Task> findByUserId(Long UserId);
+
+    List<Task> findByUser(User user);
 
 }
