@@ -10,7 +10,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 import static com.smarttask.constants.Constants.EMAIL_ALREADY_EXISTS;
 import static com.smarttask.constants.Constants.USER_NOT_FOUND;

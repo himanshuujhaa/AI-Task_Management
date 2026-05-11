@@ -21,9 +21,18 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smart_task_db
-      SPRING_DATASOURCE_USERNAME: smart_user
-      SPRING_DATASOURCE_PASSWORD: password123
+      JWT_SECRET: "/+fTXuozAGnCpV4uxWMKx9ZGeV6diZcfgbZ+boY/fSA="
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://dpg-d813mdpkh4rs73ea2i8g-a:5432/smart_task_db_8xq9
+      SPRING_DATASOURCE_USERNAME: smart_task_api
+      SPRING_DATASOURCE_PASSWORD: 0RllmusVD2cvgWsPEasTYxM7uvYgoM0r
+
+#      JWT_SECRET=/+fTXuozAGnCpV4uxWMKx9ZGeV6diZcfgbZ+boY/fSA=
+#      JWT_EXPIRATION=86400000
+
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smart_task_db
+#      SPRING_DATASOURCE_USERNAME: smart_user
+#      SPRING_DATASOURCE_PASSWORD: password123
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
 volumes:

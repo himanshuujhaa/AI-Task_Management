@@ -1,6 +1,5 @@
 package com.smarttask.service;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
 import com.smarttask.dto.DashboardResponse;
 import com.smarttask.dto.TaskRequest;
 import com.smarttask.dto.TaskResponse;
@@ -11,15 +10,10 @@ import com.smarttask.model.enums.TaskPriority;
 import com.smarttask.model.enums.TaskStatus;
 import com.smarttask.repository.TaskRepository;
 import com.smarttask.repository.UserRepository;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;

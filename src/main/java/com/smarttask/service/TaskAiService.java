@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-//import static java.lang.StringUTF16.toLowerCase;
 import java.util.*;
 
 import static com.smarttask.constants.Constants.*;

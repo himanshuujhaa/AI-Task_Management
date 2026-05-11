@@ -3,18 +3,13 @@ package com.smarttask.controller;
 import com.smarttask.dto.UserRequest;
 import com.smarttask.dto.UserResponse;
 import com.smarttask.exception.ResourceNotFoundException;
-import com.smarttask.model.entity.Task;
-import com.smarttask.model.entity.User;
-import com.smarttask.repository.TaskRepository;
 import com.smarttask.repository.UserRepository;
 import com.smarttask.service.UserService;
-import com.smarttask.service.UserServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.PublicKey;
 import java.util.List;
 
 import static com.smarttask.constants.Constants.USER_DELETED_SUCCESSFULLY;

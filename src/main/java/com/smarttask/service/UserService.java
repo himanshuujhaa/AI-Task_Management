@@ -2,7 +2,6 @@ package com.smarttask.service;
 
 import com.smarttask.dto.UserRequest;
 import com.smarttask.dto.UserResponse;
-import com.smarttask.model.entity.User;
 
 import java.util.List;
 

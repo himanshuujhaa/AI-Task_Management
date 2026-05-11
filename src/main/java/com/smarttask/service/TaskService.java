@@ -3,7 +3,6 @@ package com.smarttask.service;
 import com.smarttask.dto.DashboardResponse;
 import com.smarttask.dto.TaskRequest;
 import com.smarttask.dto.TaskResponse;
-import com.smarttask.model.entity.User;
 import com.smarttask.model.enums.TaskPriority;
 import com.smarttask.model.enums.TaskStatus;
 import org.springframework.data.domain.Page;

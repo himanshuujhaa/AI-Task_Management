@@ -1,6 +1,5 @@
 package com.smarttask.repository;
 
-import com.smarttask.dto.DashboardResponse;
 import com.smarttask.model.entity.Task;
 import com.smarttask.model.entity.User;
 import com.smarttask.model.enums.TaskPriority;
